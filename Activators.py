@@ -32,6 +32,7 @@ actFunctionDerivatives = {
     SoftPlus: ddsSoftPlus
 }
 
+
 # s=[]
 # a=[]
 # ddsa=[]

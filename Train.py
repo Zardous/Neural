@@ -15,7 +15,7 @@ epochs = 3
 
 eta = 0.05
 
-def ForwardPass(inp,):
+def ForwardPass(inp):
     activations = []
     stimuli = []
     for i in range(len(biases)):
@@ -109,3 +109,14 @@ while epoch <= epochs:
     eta *= 0.9
     epoch += 1
 print("\nFinished training")
+
+for w in range(len(weights)):
+    np.savez(f"weights[{w}].npz", weights=weights[w])
+print(f"Saved weights")
+
+for b in range(len(biases)):
+    np.savez(f"biases[{b}].npz", biases=biases[b])
+print(f"Saved biases")
+
+np.savez("ModelParameters.npz", HiddenLayersSizes=HiddenLayersSizes, epochs=epoch, InputSize=InputSize, OutputSize=OutputSize, SetSize=SetSize, act=act, actout=actout)
+print("Saved model parameters")
