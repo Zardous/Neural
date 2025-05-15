@@ -10,15 +10,13 @@ actout = Sigmoid
 ddsActout = actFunctionDerivatives[actout]
 
 InputSize = 784
-HiddenLayersSizes = (15,)
+HiddenLayersSizes = (60,)
 OutputSize = 10
-#91.70
-#91.67
-epochs = 12
+epochs = 3
 
-eta = 0.04
+eta = 0.2
 
-def ForwardPass(inp,weights,biases):
+def ForwardPass(inp,):
     activations = []
     stimuli = []
     for i in range(len(biases)):
@@ -36,7 +34,16 @@ def ForwardPass(inp,weights,biases):
             activations.append(actout(z))
     return activations, stimuli
 
-
+def SampleShow(index):
+    input = Sample(index)[0]
+    Label = Sample(index)[2]
+    activations = ForwardPass(input)[0]
+    PredictIndex = np.argmax(activations[-1])
+    PredictChar = chr(data["dataset"][0][0][2][PredictIndex][-1])
+    confidence = activations[-1][PredictIndex]
+    plt.imshow(image.reshape(28, 28).T, cmap="Greys")
+    plt.title(f"Predicted: {PredictChar}({round(confidence*100,1)}%), Actual: {Label},")
+    plt.show()
 
 #w[0] is weights for inputs to the first hidden layer
 
@@ -63,12 +70,13 @@ biases.append(np.random.randn(OutputSize, 1)*initrange)
 
 for epoch in range(epochs):
     correct = 0
+    incorrect = []
     for index in range(SetSize): #SetSize
         
         image, Target, Label, MapIndex = Sample(index)
         inp = image
 
-        activations, stimuli = ForwardPass(inp, weights, biases)
+        activations, stimuli = ForwardPass(inp)
 
         PredictIndex = np.argmax(activations[-1])
         PredictChar = chr(data["dataset"][0][0][2][PredictIndex][-1])
@@ -77,7 +85,11 @@ for epoch in range(epochs):
         print(f"Predicted: {PredictChar}, Actual: {Label}, Index: {index}, epoch: {epoch+1}/{epochs}")
         if PredictChar == Label:
             correct +=1
-        print(f"Accuracy: {round(correct/(index+1)*100,2)}%")
+        else:
+            incorrect += [index]
+
+        # Print accuracy on the same console line to avoid spamming
+        print(f"Accuracy: {round(correct/(index+1)*100,2)}%", end='\r')
 
         #backward pass
         cost = np.square(Target - output)
