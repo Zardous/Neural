@@ -9,12 +9,11 @@ ddsAct = actFunctionDerivatives[act]
 actout = Sigmoid
 ddsActout = actFunctionDerivatives[actout]
 
-InputSize = 784
-HiddenLayersSizes = (60,)
-OutputSize = 10
+HiddenLayersSizes = (100,100)
+
 epochs = 3
 
-eta = 0.2
+eta = 0.05
 
 def ForwardPass(inp,):
     activations = []
@@ -47,7 +46,7 @@ def SampleShow(index):
 
 #w[0] is weights for inputs to the first hidden layer
 
-#Initialize every layer's weight in alist, taking into account wether or not there are hidden layers
+#Initialize every layer's weight in a list, taking into account wether or not there are hidden layers
 initrange =0.05
 weights = []
 if len(HiddenLayersSizes) > 0:
@@ -66,15 +65,12 @@ for i in range(0, len(HiddenLayersSizes)):
 biases.append(np.random.randn(OutputSize, 1)*initrange)
 
 
-
-epoch = 0
+epoch = 1
 accuracy = 0
-while accuracy <= 0.985:
-    epoch += 1
+while epoch <= epochs:
     correct = 0
     incorrect = []
     for index in range(SetSize): #SetSize
-
         image, Target, Label, MapIndex = Sample(index)
         inp = image
 
@@ -94,9 +90,10 @@ while accuracy <= 0.985:
         accuracy = correct / ((index%1000)+1)
         print("\033[K\r", end="") #clear line
         print(f"Correct: {"Yes" if PredictChar==Label else "No "} Index: {index}, epoch: {epoch}/{epochs}, Accuracy: {round(100*accuracy,1)}% ", end="")
-        print(weights[-1][0][0], end="")
+        # print(weights[-1][0][0], end="")
+
         #backward pass
-        cost = np.square(Target - output)
+        cost = np.square(Target - activations[-1])
 
         for i in range(len(HiddenLayersSizes),-1,-1):
             if i == len(HiddenLayersSizes): #output layer
@@ -109,7 +106,6 @@ while accuracy <= 0.985:
             else:
                 weights[i] += - eta * delta @ inp.T    
             biases[i] += - eta * delta
-    eta *= 0.95
+    eta *= 0.9
+    epoch += 1
 print("\nFinished training")
-
-print("hi")
