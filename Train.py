@@ -40,8 +40,8 @@ def SampleShow(index):
     activations = ForwardPass(input)[0]
     PredictIndex = np.argmax(activations[-1])
     PredictChar = chr(data["dataset"][0][0][2][PredictIndex][-1])
-    confidence = activations[-1][PredictIndex]
-    plt.imshow(image.reshape(28, 28).T, cmap="Greys")
+    confidence = activations[-1][PredictIndex][0]
+    plt.imshow(input.reshape(28, 28).T, cmap="Greys")
     plt.title(f"Predicted: {PredictChar}({round(confidence*100,1)}%), Actual: {Label},")
     plt.show()
 
@@ -67,8 +67,10 @@ biases.append(np.random.randn(OutputSize, 1)*initrange)
 
 
 
-
-for epoch in range(epochs):
+epoch = 0
+accuracy = 0
+while accuracy <= 0.985:
+    epoch += 1
     correct = 0
     incorrect = []
     for index in range(SetSize): #SetSize
@@ -82,14 +84,17 @@ for epoch in range(epochs):
         PredictChar = chr(data["dataset"][0][0][2][PredictIndex][-1])
         output = activations[-1]
 
-        if PredictChar == Label:
+        if int(PredictIndex) == int(MapIndex):
             correct += 1
         else:
             incorrect += [index]
         if index % 1000 == 0:
             correct = 0
+        
+        accuracy = correct / ((index%1000)+1)
         print("\033[K\r", end="") #clear line
-        print(f"Correct: {"Yes" if PredictChar==Label else "No "} Index: {index}, epoch: {epoch+1}/{epochs}, Accuracy: {round(correct/((index%1000)+1)*100,1)}% ", end="")
+        print(f"Correct: {"Yes" if PredictChar==Label else "No "} Index: {index}, epoch: {epoch}/{epochs}, Accuracy: {round(100*accuracy,1)}% ", end="")
+        print(weights[-1][0][0], end="")
         #backward pass
         cost = np.square(Target - output)
 
@@ -104,4 +109,7 @@ for epoch in range(epochs):
             else:
                 weights[i] += - eta * delta @ inp.T    
             biases[i] += - eta * delta
+    eta *= 0.95
 print("\nFinished training")
+
+print("hi")
