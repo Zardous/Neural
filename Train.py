@@ -72,7 +72,7 @@ for epoch in range(epochs):
     correct = 0
     incorrect = []
     for index in range(SetSize): #SetSize
-        
+
         image, Target, Label, MapIndex = Sample(index)
         inp = image
 
@@ -82,15 +82,14 @@ for epoch in range(epochs):
         PredictChar = chr(data["dataset"][0][0][2][PredictIndex][-1])
         output = activations[-1]
 
-        print(f"Predicted: {PredictChar}, Actual: {Label}, Index: {index}, epoch: {epoch+1}/{epochs}")
         if PredictChar == Label:
-            correct +=1
+            correct += 1
         else:
             incorrect += [index]
-
-        # Print accuracy on the same console line to avoid spamming
-        print(f"Accuracy: {round(correct/(index+1)*100,2)}%", end='\r')
-
+        if index % 1000 == 0:
+            correct = 0
+        print("\033[K\r", end="") #clear line
+        print(f"Correct: {"Yes" if PredictChar==Label else "No "} Index: {index}, epoch: {epoch+1}/{epochs}, Accuracy: {round(correct/((index%1000)+1)*100,1)}% ", end="")
         #backward pass
         cost = np.square(Target - output)
 
@@ -105,4 +104,4 @@ for epoch in range(epochs):
             else:
                 weights[i] += - eta * delta @ inp.T    
             biases[i] += - eta * delta
-print("done")
+print("\nFinished training")

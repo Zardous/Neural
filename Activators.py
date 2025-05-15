@@ -32,21 +32,21 @@ actFunctionDerivatives = {
     SoftPlus: ddsSoftPlus
 }
 
-s=[]
-a=[]
-ddsa=[]
-x=-10.0
-while x < 10.0:
-    s.append(x)
-    a.append(SoftPlus(x))
-    ddsa.append(ddsSoftPlus(x))
-    x += 0.1
-    x= round(x, 2)
+# s=[]
+# a=[]
+# ddsa=[]
+# x=-10.0
+# while x < 10.0:
+#     s.append(x)
+#     a.append(SoftPlus(x))
+#     ddsa.append(ddsSoftPlus(x))
+#     x += 0.1
+#     x= round(x, 2)
 
-import matplotlib.pyplot as plt
-plt.plot(s, a)
-plt.plot(s, ddsa)
-plt.xlabel("s")
-plt.ylabel("a")
-plt.grid()
-plt.show()
+# import matplotlib.pyplot as plt
+# plt.plot(s, a)
+# plt.plot(s, ddsa)
+# plt.xlabel("s")
+# plt.ylabel("a")
+# plt.grid()
+# plt.show()
