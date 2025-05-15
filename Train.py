@@ -10,10 +10,11 @@ actout = Sigmoid
 ddsActout = actFunctionDerivatives[actout]
 
 InputSize = 784
-HiddenLayersSizes = (16,16,16)
+HiddenLayersSizes = (15,)
 OutputSize = 10
-
-epochs = 3
+#91.70
+#91.67
+epochs = 12
 
 eta = 0.04
 
