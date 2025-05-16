@@ -95,7 +95,7 @@ while epoch <= epochs or accuracy < targetAccuracy:
 
         print("\033[K\r", end="") #clear line
         print(f"Correct: {"Yes" if PredictChar==Label else "No "} Index: {index}, epoch: {epoch}/{epochs}, Accuracy: {round(100*accuracy,1)}% ", end="")
-        # print(weights[-1][0][0], end="")
+        # print(weights[-1][0][0], end="") #print the first weight of the last layer
 
         #backward pass
         cost = np.square(Target - activations[-1])
