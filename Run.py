@@ -60,3 +60,9 @@ for i in range(len(HiddenLayersSizes)+1):
 
 print("Ready")
 
+while True:
+    index = input("Enter index to show image: ")
+    if index == "":
+        SampleShow(np.random.randint(0, SetSize))
+    else:
+        SampleShow(int(index))
