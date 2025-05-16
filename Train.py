@@ -9,11 +9,13 @@ ddsAct = actFunctionDerivatives[act]
 actout = Sigmoid
 ddsActout = actFunctionDerivatives[actout]
 
-HiddenLayersSizes = (100,100)
+HiddenLayersSizes = (80,80)
 
 epochs = 3
 
 eta = 0.05
+
+targetAccuracy = 0.95
 
 def ForwardPass(inp):
     activations = []
@@ -67,7 +69,8 @@ biases.append(np.random.randn(OutputSize, 1)*initrange)
 
 epoch = 1
 accuracy = 0
-while epoch <= epochs:
+results = np.zeros((1000,1))
+while epoch <= epochs or accuracy < targetAccuracy:
     correct = 0
     incorrect = []
     for index in range(SetSize): #SetSize
@@ -87,7 +90,9 @@ while epoch <= epochs:
         if index % 1000 == 0:
             correct = 0
         
-        accuracy = correct / ((index%1000)+1)
+        results[index%1000] = 1 if int(PredictIndex) == int(MapIndex) else 0
+        accuracy = np.sum(results) / 1000
+
         print("\033[K\r", end="") #clear line
         print(f"Correct: {"Yes" if PredictChar==Label else "No "} Index: {index}, epoch: {epoch}/{epochs}, Accuracy: {round(100*accuracy,1)}% ", end="")
         # print(weights[-1][0][0], end="")

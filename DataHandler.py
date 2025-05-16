@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 print("Loading EMNIST")
 T0 = time.time()
-data = scipy.io.loadmat("data/emnist-byclass.mat")
+data = scipy.io.loadmat("data/emnist-mnist.mat")
 print(f"Loaded EMNIST in {round(time.time() - T0,2)}s")
 SetSize = data["dataset"][0][0][0][0][0][0].shape[0]
 
@@ -33,7 +33,7 @@ def Sample(Index=np.random.randint(0, SetSize)):
 
     Label = chr(data["dataset"][0][0][2][MapIndex][-1])
 
-    Target = np.zeros((62, 1))
+    Target = np.zeros((OutputSize, 1))
     Target[MapIndex] = 1
     return image, Target, Label, MapIndex
 
