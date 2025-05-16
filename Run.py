@@ -31,7 +31,9 @@ def SampleShow(index):
     PredictChar = chr(data["dataset"][0][0][2][PredictIndex][-1])
     confidence = activations[-1][PredictIndex][0]
     plt.imshow(input.reshape(28, 28).T, cmap="Greys")
-    plt.title(f"Predicted: {PredictChar}({round(confidence*100,1)}%), Actual: {Label},")
+    plt.title(f"Predicted: {PredictChar} ({round(confidence*100,1)}%), Actual: {Label},")
+    plt.xticks([])
+    plt.yticks([])
     plt.show()
 
 print("Loading model parameters")
@@ -64,5 +66,11 @@ while True:
     index = input("Enter index to show image: ")
     if index == "":
         SampleShow(np.random.randint(0, SetSize))
+    elif index == "q":
+        break
     else:
-        SampleShow(int(index))
+        try:
+            SampleShow(int(index))
+        except:
+            print("Invalid index")
+            continue
