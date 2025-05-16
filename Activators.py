@@ -25,11 +25,27 @@ def SoftPlus(s):
 def ddsSoftPlus(s):
     return np.exp(s)/(1 + np.exp(s))
 
+def Tanh(s):
+    return np.tanh(s)
+
+def ddsTanh(s):
+    return 1 - np.tanh(s)**2
+
+def SoftMax(s):
+    return np.exp(s) / np.sum(np.exp(s))
+
+def ddsSoftMax(s):
+    print("Work in progress")
+    quit
+    return 
+
 actFunctionDerivatives = {
     Sigmoid: ddsSigmoid,
     ReLU: ddsReLU,
     LeakyReLU: ddsLeakyReLU,
-    SoftPlus: ddsSoftPlus
+    SoftPlus: ddsSoftPlus,
+    Tanh: ddsTanh,
+    SoftMax: ddsSoftMax
 }
 
 

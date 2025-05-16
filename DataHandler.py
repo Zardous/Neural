@@ -3,12 +3,12 @@ import time
 import scipy.io
 import matplotlib.pyplot as plt
 
-print("Loading EMNIST")
+setName = "mnist"
+print(f"Loading {setName.upper()} dataset")
 T0 = time.time()
-data = scipy.io.loadmat("data/emnist-mnist.mat")
-print(f"Loaded EMNIST in {round(time.time() - T0,2)}s")
+data = scipy.io.loadmat(f"data/emnist-{setName}.mat")
+print(f"Loaded {setName.upper()} in {round(time.time() - T0,2)}s")
 SetSize = data["dataset"][0][0][0][0][0][0].shape[0]
-
 OutputSize = data["dataset"][0][0][2].shape[0]
 InputSize = data["dataset"][0][0][0][0][0][0].shape[1]
 
@@ -37,11 +37,12 @@ def Sample(Index=np.random.randint(0, SetSize)):
     Target[MapIndex] = 1
     return image, Target, Label, MapIndex
 
-def ShowImage(Index=np.random.randint(0, SetSize)):
-    image, Target, Label, MapIndex = Sample(Index)
-    plt.imshow(image.reshape(28, 28).T, cmap="Greys")
-    plt.title(f"Index: {Index}, Label: {Label}")
-    plt.show()
+# No longer used
+# def ShowImage(Index=np.random.randint(0, SetSize)):
+#     image, Target, Label, MapIndex = Sample(Index)
+#     plt.imshow(image.reshape(28, 28).T, cmap="Greys")
+#     plt.title(f"Index: {Index}, Label: {Label}")
+#     plt.show()
 
 # mapping:
 # 0: 0
