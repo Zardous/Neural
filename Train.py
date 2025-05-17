@@ -73,7 +73,7 @@ if __name__ == "__main__": #only run this if this file is run directly, not when
     accuracy = 0
     results = np.zeros((5000,1))
 
-    outputFolder = input('Enter folder to store output: ')
+    outputFolder = input("Enter folder to store output: ")
     if outputFolder == "":
         outputFolder = "Output"
         print(f"Defaulting output folder to: \"{outputFolder}\"")
