@@ -35,7 +35,7 @@ def SoftMax(s):
     return np.exp(s) / np.sum(np.exp(s))
 
 def ddsSoftMax(s):
-    print("Work in progress")
+    print('Work in progress')
     quit
     return 
 
@@ -49,12 +49,12 @@ actFunctionDerivatives = {
 }
 
 actFunctionNames = {
-    "Sigmoid": Sigmoid,
-    "ReLU": ReLU,
-    "LeakyReLU": LeakyReLU,
-    "SoftPlus": SoftPlus,
-    "Tanh": Tanh,
-    "SoftMax": SoftMax
+    'Sigmoid': Sigmoid,
+    'ReLU': ReLU,
+    'LeakyReLU': LeakyReLU,
+    'SoftPlus': SoftPlus,
+    'Tanh': Tanh,
+    'SoftMax': SoftMax
 }
 
 
@@ -73,7 +73,7 @@ actFunctionNames = {
 # import matplotlib.pyplot as plt
 # plt.plot(s, a)
 # plt.plot(s, ddsa)
-# plt.xlabel("s")
-# plt.ylabel("a")
+# plt.xlabel('s')
+# plt.ylabel('a')
 # plt.grid()
 # plt.show()

@@ -3,35 +3,35 @@ import time
 import scipy.io
 import matplotlib.pyplot as plt
 
-setName = "mnist"
-print(f"Loading {setName.upper()} dataset")
+setName = 'mnist' # Choose from downloaded datasets; mnist or byclass
+print(f'Loading {setName.upper()} dataset')
 T0 = time.time()
-data = scipy.io.loadmat(f"data/emnist-{setName}.mat")
-print(f"Loaded {setName.upper()} in {round(time.time() - T0,2)}s")
-SetSize = data["dataset"][0][0][0][0][0][0].shape[0]
-OutputSize = data["dataset"][0][0][2].shape[0]
-InputSize = data["dataset"][0][0][0][0][0][0].shape[1]
+data = scipy.io.loadmat(f'data/emnist-{setName}.mat')
+print(f'Loaded {setName.upper()} in {round(time.time() - T0,2)}s')
+SetSize = data['dataset'][0][0][0][0][0][0].shape[0]
+OutputSize = data['dataset'][0][0][2].shape[0]
+InputSize = data['dataset'][0][0][0][0][0][0].shape[1]
 
 # images:
-# print(data["dataset"][0][0][0][0][0][0])
+# print(data['dataset'][0][0][0][0][0][0])
 
 # labels:
-# print(data["dataset"][0][0][0][0][0][1])
+# print(data['dataset'][0][0][0][0][0][1])
 
 # mapping:
-# print(data["dataset"][0][0][2])
-# print(chr(data["dataset"][0][0][2][MapIndex][-1]))
+# print(data['dataset'][0][0][2])
+# print(chr(data['dataset'][0][0][2][MapIndex][-1]))
 
 
 def Sample(Index=np.random.randint(0, SetSize)):
-    image = data["dataset"][0][0][0][0][0][0][Index].reshape(784,1) / 255
+    image = data['dataset'][0][0][0][0][0][0][Index].reshape(784,1) / 255
     shift = np.random.randint(-3,3,(1,2))
     image = np.roll(image, shift=shift[0,0]+28*shift[0,1], axis=0)
     image += np.random.randn(*image.shape)/15
 
-    MapIndex = data["dataset"][0][0][0][0][0][1][Index][0]
+    MapIndex = data['dataset'][0][0][0][0][0][1][Index][0]
 
-    Label = chr(data["dataset"][0][0][2][MapIndex][-1])
+    Label = chr(data['dataset'][0][0][2][MapIndex][-1])
 
     Target = np.zeros((OutputSize, 1))
     Target[MapIndex] = 1
@@ -40,8 +40,8 @@ def Sample(Index=np.random.randint(0, SetSize)):
 # No longer used
 # def ShowImage(Index=np.random.randint(0, SetSize)):
 #     image, Target, Label, MapIndex = Sample(Index)
-#     plt.imshow(image.reshape(28, 28).T, cmap="Greys")
-#     plt.title(f"Index: {Index}, Label: {Label}")
+#     plt.imshow(image.reshape(28, 28).T, cmap='Greys')
+#     plt.title(f'Index: {Index}, Label: {Label}')
 #     plt.show()
 
 # mapping:

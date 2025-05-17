@@ -46,8 +46,8 @@ def ForwardPass(inp):
 
 #example: weights[0] is weights for inputs to the first hidden layer
 
-if __name__ == "__main__": #only run this if this file is run directly, not when imported
-    print("Training model")
+if __name__ == '__main__': #only run this if this file is run directly, not when imported
+    print('Training model')
 
     #Randomly initialize every layer's weights and biases in a list, taking into account whether or not there are hidden layers
     weights = []
@@ -59,13 +59,13 @@ if __name__ == "__main__": #only run this if this file is run directly, not when
     elif len(HiddenLayersSizes) == 0:
         weights.append(np.random.randn(OutputSize, InputSize) * weightsInitRange + weightsMedian)
     else:
-        raise ValueError("Invalid number of hidden layers")
+        raise ValueError('Invalid number of hidden layers')
     
     biases = []
     for i in range(0, len(HiddenLayersSizes)):
         biases.append(np.random.randn(HiddenLayersSizes[i], 1) * biasesInitRange + biasesMedian)
     biases.append(np.random.randn(OutputSize, 1) * biasesInitRange + biasesMedian)
-    print("Initialised weights and biases")
+    print('Initialised weights and biases')
 
     # Train the model
     Tstart = time.time()
@@ -73,12 +73,12 @@ if __name__ == "__main__": #only run this if this file is run directly, not when
     accuracy = 0
     results = np.zeros((5000,1))
 
-    outputFolder = input("Enter folder to store output: ")
-    if outputFolder == "":
-        outputFolder = "Output"
-        print(f"Defaulting output folder to: \"{outputFolder}\"")
+    outputFolder = input('Enter folder to store output: ')
+    if outputFolder == '':
+        outputFolder = 'Output'
+        print(f'Defaulting output folder to: \'{outputFolder}\'')
     else:
-        print(f"Output folder set to: \"{outputFolder}\"")
+        print(f'Output folder set to: \'{outputFolder}\'')
 
     while epoch <= epochs or accuracy < targetAccuracy:
         correct = 0
@@ -91,15 +91,15 @@ if __name__ == "__main__": #only run this if this file is run directly, not when
             activations, stimuli = ForwardPass(inp)
 
             PredictIndex = np.argmax(activations[-1]) #Find the index that has the highest predicted probability
-            PredictChar = chr(data["dataset"][0][0][2][PredictIndex][-1]) #Map the index to a character
+            PredictChar = chr(data['dataset'][0][0][2][PredictIndex][-1]) #Map the index to a character
 
             if PredictChar != Label:
                 incorrect += [index] #Store indexes that were predicted incorrectly
             
             results[index % (results.shape[0])] = 1 if PredictChar == Label else 0 #If predicted correctly, set an entry to 1, else 0
-            accuracy = np.sum(results) / max( results.shape[0] , index + 1)
+            accuracy = np.sum(results) / min( results.shape[0] , index + 1)
 
-            print(f"Index: {index}/{round(SetSize*trainFraction)}, epoch: {epoch}/{epochs}, Accuracy: {round(100*accuracy,1)}%, Iteration time: {round(1000*(time.time()-epochStart)/(index+1),2)}ms Compute time: {int(np.floor((time.time()-Tstart)/60))}m{round((time.time()-Tstart)%60)}s        ", end="\r")
+            print(f'Index: {index}/{round(SetSize*trainFraction)}, epoch: {epoch}/{epochs}, Accuracy: {round(100*accuracy,1)}%, Iteration time: {round(1000*(time.time()-epochStart)/(index+1),2)}ms Compute time: {int(np.floor((time.time()-Tstart)/60))}m{round((time.time()-Tstart)%60)}s        ', end='\r')
 
             #backward pass
 
@@ -120,7 +120,7 @@ if __name__ == "__main__": #only run this if this file is run directly, not when
         
         eta *= etaDecay
         epoch += 1
-    print("\nFinished training")
+    print('\nFinished training')
 
     # If the output folder doesn't exist, create it
     if not os.path.exists(outputFolder):
@@ -128,25 +128,25 @@ if __name__ == "__main__": #only run this if this file is run directly, not when
 
     # Save weights
     for w in range(len(weights)):
-        np.savez(f"{outputFolder}/weights[{w}].npz", weights=weights[w])
-    print(f"Saved weights")
+        np.savez(f'{outputFolder}/weights[{w}].npz', weights=weights[w])
+    print(f'Saved weights')
 
     # Save biases
     for b in range(len(biases)):
-        np.savez(f"{outputFolder}/biases[{b}].npz", biases=biases[b])
-    print(f"Saved biases")
+        np.savez(f'{outputFolder}/biases[{b}].npz', biases=biases[b])
+    print(f'Saved biases')
 
     # Save model parameters
-    np.savez(f"{outputFolder}/ModelParameters.npz", HiddenLayersSizes=HiddenLayersSizes, epochs=epoch, InputSize=InputSize, OutputSize=OutputSize, SetSize=SetSize, act=act.__name__, actout=actout.__name__, accuracy=accuracy)
+    np.savez(f'{outputFolder}/ModelParameters.npz', HiddenLayersSizes=HiddenLayersSizes, epochs=epoch, InputSize=InputSize, OutputSize=OutputSize, SetSize=SetSize, act=str(act.__name__), actout=str(actout.__name__), accuracy=accuracy)
 
-    layers = ""
-    layers += f"{InputSize}-"
+    layers = ''
+    layers += f'{InputSize}-'
     for i in range(len(HiddenLayersSizes)):
-        layers += f"{HiddenLayersSizes[i]}-"
-    layers += f"{OutputSize}"
+        layers += f'{HiddenLayersSizes[i]}-'
+    layers += f'{OutputSize}'
 
-    Summary = f"{layers}, {setName.upper()}, {round(100*accuracy,1)}%, {act.__name__}, {actout.__name__}"
-    with open(f"{outputFolder}/{Summary}", "w") as f:
-        f.write("")
+    Summary = f'{layers}, {setName.upper()}, {round(100*accuracy,1)}%, {act.__name__}, {actout.__name__}'
+    with open(f'{outputFolder}/{Summary}', 'w') as f:
+        f.write('')
 
-    print("Saved model parameters")
+    print('Saved model parameters')
