@@ -37,6 +37,31 @@ def ForwardPass(inp): #copy of the function in Train.py
             activations.append(actout(z))
     return activations, stimuli
 
+def benchmark():
+    correct = 0
+    count = 0
+    Tstart = time.time()
+    global incorrect
+    incorrect = []
+    for index in range(round(SetSize * trainFraction), SetSize):
+            count += 1
+            image, Target, Label, MapIndex = Sample(index)
+            inp = image
+
+            activations, stimuli = ForwardPass(inp)
+
+            PredictIndex = np.argmax(activations[-1]) #Find the index that has the highest predicted probability
+            PredictChar = chr(data["dataset"][0][0][2][PredictIndex][-1]) #Map the index to a character
+
+            if PredictChar == Label:
+                correct += 1
+            else:
+                incorrect += [index] #Store indexes that were predicted incorrectly
+            
+            accuracy = correct / count
+
+            print(f"Index: {index}/{SetSize}, Accuracy: {round(100*accuracy,1)}%, Iteration time: {round(1000*(time.time()-Tstart)/(index+1),2)}ms Compute time: {int(np.floor((time.time()-Tstart)/60))}m{round((time.time()-Tstart)%60)}s        ", end="\r")
+
 if __name__ == "__main__": #only run if this file is run directly, not when imported
     inputFolder = input('Enter folder to load model: ')
     if inputFolder == "":
@@ -51,8 +76,8 @@ if __name__ == "__main__": #only run if this file is run directly, not when impo
     InputSize = ModelParameters["InputSize"]
     OutputSize = ModelParameters["OutputSize"]
     epochs = ModelParameters["epochs"]
-    act = Sigmoid #ModelParameters["act"]
-    actout = Sigmoid #ModelParameters["actout"]
+    act = actFunctionNames[str(ModelParameters["act"])]
+    actout = actFunctionNames[str(ModelParameters["actout"])]
     ddsAct = actFunctionDerivatives[act]
     ddsActout = actFunctionDerivatives[actout]
 

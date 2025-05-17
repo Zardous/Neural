@@ -48,6 +48,16 @@ actFunctionDerivatives = {
     SoftMax: ddsSoftMax
 }
 
+actFunctionNames = {
+    "Sigmoid": Sigmoid,
+    "ReLU": ReLU,
+    "LeakyReLU": LeakyReLU,
+    "SoftPlus": SoftPlus,
+    "Tanh": Tanh,
+    "SoftMax": SoftMax
+}
+
+
 
 # s=[]
 # a=[]

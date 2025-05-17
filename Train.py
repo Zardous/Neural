@@ -15,7 +15,7 @@ weightsMedian = 0.0
 biasesInitRange = 0.
 biasesMedian = 0.0
 
-HiddenLayersSizes = (30, 30)
+HiddenLayersSizes = (150, 80) #TODO: Figure out how to choose layers, maybe train an AI
 
 epochs = 3
 
@@ -83,6 +83,7 @@ if __name__ == "__main__": #only run this if this file is run directly, not when
     while epoch <= epochs or accuracy < targetAccuracy:
         correct = 0
         incorrect = []
+        epochStart = time.time() # Store starting time of epoch for iteration time calculation
         for index in range(round(SetSize * trainFraction)):
             image, Target, Label, MapIndex = Sample(index)
             inp = image
@@ -96,9 +97,9 @@ if __name__ == "__main__": #only run this if this file is run directly, not when
                 incorrect += [index] #Store indexes that were predicted incorrectly
             
             results[index % (results.shape[0])] = 1 if PredictChar == Label else 0 #If predicted correctly, set an entry to 1, else 0
-            accuracy = np.sum(results) / results.shape[0]
+            accuracy = np.sum(results) / max( results.shape[0] , index + 1)
 
-            print(f"Index: {index}/{round(SetSize*trainFraction)}, epoch: {epoch}/{epochs}, Accuracy: {round(100*accuracy,1)}%, Compute time: {int(np.floor((time.time()-Tstart)/60))}m{round((time.time()-Tstart)%60)}s        ", end="\r")
+            print(f"Index: {index}/{round(SetSize*trainFraction)}, epoch: {epoch}/{epochs}, Accuracy: {round(100*accuracy,1)}%, Iteration time: {round(1000*(time.time()-epochStart)/(index+1),2)}ms Compute time: {int(np.floor((time.time()-Tstart)/60))}m{round((time.time()-Tstart)%60)}s        ", end="\r")
 
             #backward pass
 
@@ -116,6 +117,7 @@ if __name__ == "__main__": #only run this if this file is run directly, not when
                     # check if this part is correct when there is no hidden layer
                     weights[i] += - eta * delta @ inp.T    
                 biases[i] += - eta * delta
+        
         eta *= etaDecay
         epoch += 1
     print("\nFinished training")
