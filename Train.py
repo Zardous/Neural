@@ -5,28 +5,29 @@ import os
 #row of matrix is array of weights on the neuron
 
 #Choose activation functions
-act = Asinh
-ddsAct = actFunctionDerivatives[act]
+act = Sigmoid
 actout = SoftMax
-ddsActout = actFunctionDerivatives[actout]
+ddsAct = eval("dds"+act.__name__)
+ddsActout = eval("dds"+actout.__name__)
 
-weightsInitRange =0.1
+weightsInitRange =0.003
 weightsMedian = 0.0
 biasesInitRange = 0.0
 biasesMedian = 0.0
 
-HiddenLayersSizes = (80,40) #TODO: Figure out how to choose layers, maybe train an AI
+HiddenLayersSizes = (80,) #TODO: Figure out how to choose layers, maybe train an AI
+batchSize = 10
 
 epochs = 1
 
-eta = 0.01 #learning rate
+eta = 0.005 #learning rate
 etaDecay = 0.7 #learning rate decay
 
-targetAccuracy = 0.95 #Targeted accuracy
+targetAccuracy = 0.97 #Targeted accuracy
 
 trainFraction = 0.9 #fraction of the dataset to use for training
 
-def ForwardPass(inp):
+def ForwardPass(inp, weights, biases):
     activations = []
     stimuli = []
     for i in range(len(biases)):
@@ -51,20 +52,28 @@ if __name__ == '__main__': #only run this if this file is run directly, not when
 
     #Randomly initialize every layer's weights and biases in a list, taking into account whether or not there are hidden layers
     weights = []
+    deltaWeights = []
     if len(HiddenLayersSizes) > 0:
         weights.append(np.random.randn(HiddenLayersSizes[0], InputSize) * weightsInitRange + weightsMedian)
+        deltaWeights.append(np.zeros((HiddenLayersSizes[0], InputSize)))
         for i in range(1, len(HiddenLayersSizes)):
             weights.append(np.random.randn(HiddenLayersSizes[i], HiddenLayersSizes[i-1]) * weightsInitRange + weightsMedian)
+            deltaWeights.append(np.zeros((HiddenLayersSizes[i], HiddenLayersSizes[i-1])))
         weights.append(np.random.randn(OutputSize, HiddenLayersSizes[-1]) * weightsInitRange + weightsMedian)
+        deltaWeights.append(np.zeros((OutputSize, HiddenLayersSizes[-1])))
     elif len(HiddenLayersSizes) == 0:
         weights.append(np.random.randn(OutputSize, InputSize) * weightsInitRange + weightsMedian)
+        deltaWeights.append(np.zeros((OutputSize, InputSize)))
     else:
         raise ValueError('Invalid number of hidden layers')
     
     biases = []
+    deltaBiases = []
     for i in range(0, len(HiddenLayersSizes)):
         biases.append(np.random.randn(HiddenLayersSizes[i], 1) * biasesInitRange + biasesMedian)
+        deltaBiases.append(np.zeros((HiddenLayersSizes[i], 1)))
     biases.append(np.random.randn(OutputSize, 1) * biasesInitRange + biasesMedian)
+    deltaBiases.append(np.zeros((OutputSize, 1)))
     print('Initialised weights and biases')
 
     # Train the model
@@ -88,7 +97,7 @@ if __name__ == '__main__': #only run this if this file is run directly, not when
             image, Target, Label, MapIndex = Sample(index)
             inp = image
 
-            activations, stimuli = ForwardPass(inp)
+            activations, stimuli = ForwardPass(inp, weights, biases)
 
             PredictIndex = np.argmax(activations[-1]) #Find the index that has the highest predicted probability
             PredictChar = chr(data['dataset'][0][0][2][PredictIndex][-1]) #Map the index to a character
@@ -103,9 +112,6 @@ if __name__ == '__main__': #only run this if this file is run directly, not when
                 print(f'Index: {index}/{round(SetSize*trainFraction)}, epoch: {epoch}/{epochs}, Accuracy: {round(100*accuracy,1)}%, Iteration time: {round(1000*(time.time()-epochStart)/(index+1),2)}ms Compute time: {int(np.floor((time.time()-Tstart)/60))}m{round((time.time()-Tstart)%60)}s        ', end='\r')
 
             #backward pass
-
-            # cost = np.square(Target - activations[-1]) #Calculate cost
-
             for i in range(len(HiddenLayersSizes),-1,-1):
                 if i == len(HiddenLayersSizes): #output layer
                     gradC = activations[i] - Target #gradient of the cost function
@@ -113,11 +119,18 @@ if __name__ == '__main__': #only run this if this file is run directly, not when
                 else:
                     delta = weights[i+1].T @ delta * ddsAct(stimuli[i])
                 if i != 0:
-                    weights[i] += - eta * delta @ activations[i-1].T
+                    # weights[i] += - eta * delta @ activations[i-1].T
+                    deltaWeights[i] += - eta * delta @ activations[i-1].T
                 else: # If the first hidden layer accesses the previous layer, give the input
-                    # check if this part is correct when there is no hidden layer
-                    weights[i] += - eta * delta @ inp.T    
-                biases[i] += - eta * delta
+                    # weights[i] += - eta * delta @ inp.T    
+                    deltaWeights[i] += - eta * delta @ inp.T    
+                # biases[i] += - eta * delta
+                deltaBiases[i] += - eta * delta
+
+            if index%batchSize == 0:
+                for i in range(len(weights)):
+                    weights[i] += deltaWeights[i]/batchSize
+                    biases[i] += deltaBiases[i]/batchSize
         
         eta *= etaDecay
         epoch += 1
