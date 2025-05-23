@@ -76,10 +76,10 @@ if __name__ == '__main__': #only run if this file is run directly, not when impo
     InputSize = ModelParameters['InputSize']
     OutputSize = ModelParameters['OutputSize']
     epochs = ModelParameters['epochs']
-    act = actFunctionNames[str(ModelParameters['act'])]
-    actout = actFunctionNames[str(ModelParameters['actout'])]
-    ddsAct = actFunctionDerivatives[act]
-    ddsActout = actFunctionDerivatives[actout]
+    act = eval(str(ModelParameters['act'])) 
+    actout = eval(str(ModelParameters['actout']))
+    ddsAct = eval("dds"+str(ModelParameters['act']))
+    ddsActout = eval("dds"+str(ModelParameters['actout']))
 
     weights = []
     biases = []

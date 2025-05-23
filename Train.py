@@ -5,21 +5,21 @@ import os
 #row of matrix is array of weights on the neuron
 
 #Choose activation functions
-act = Sigmoid
+act = Asinh
 ddsAct = actFunctionDerivatives[act]
-actout = Sigmoid
+actout = SoftMax
 ddsActout = actFunctionDerivatives[actout]
 
-weightsInitRange =0.5
+weightsInitRange =0.1
 weightsMedian = 0.0
-biasesInitRange = 0.
+biasesInitRange = 0.0
 biasesMedian = 0.0
 
-HiddenLayersSizes = (150, 80) #TODO: Figure out how to choose layers, maybe train an AI
+HiddenLayersSizes = (80,40) #TODO: Figure out how to choose layers, maybe train an AI
 
-epochs = 3
+epochs = 1
 
-eta = 0.1 #learning rate
+eta = 0.01 #learning rate
 etaDecay = 0.7 #learning rate decay
 
 targetAccuracy = 0.95 #Targeted accuracy
@@ -97,9 +97,10 @@ if __name__ == '__main__': #only run this if this file is run directly, not when
                 incorrect += [index] #Store indexes that were predicted incorrectly
             
             results[index % (results.shape[0])] = 1 if PredictChar == Label else 0 #If predicted correctly, set an entry to 1, else 0
-            accuracy = np.sum(results) / min( results.shape[0] , index + 1)
+            accuracy = np.sum(results) / min( results.shape[0] , index + 1 + (epoch-1) * SetSize * trainFraction)
 
-            print(f'Index: {index}/{round(SetSize*trainFraction)}, epoch: {epoch}/{epochs}, Accuracy: {round(100*accuracy,1)}%, Iteration time: {round(1000*(time.time()-epochStart)/(index+1),2)}ms Compute time: {int(np.floor((time.time()-Tstart)/60))}m{round((time.time()-Tstart)%60)}s        ', end='\r')
+            if index%100==0:
+                print(f'Index: {index}/{round(SetSize*trainFraction)}, epoch: {epoch}/{epochs}, Accuracy: {round(100*accuracy,1)}%, Iteration time: {round(1000*(time.time()-epochStart)/(index+1),2)}ms Compute time: {int(np.floor((time.time()-Tstart)/60))}m{round((time.time()-Tstart)%60)}s        ', end='\r')
 
             #backward pass
 
@@ -137,7 +138,16 @@ if __name__ == '__main__': #only run this if this file is run directly, not when
     print(f'Saved biases')
 
     # Save model parameters
-    np.savez(f'{outputFolder}/ModelParameters.npz', HiddenLayersSizes=HiddenLayersSizes, epochs=epoch, InputSize=InputSize, OutputSize=OutputSize, SetSize=SetSize, act=str(act.__name__), actout=str(actout.__name__), accuracy=accuracy)
+    np.savez(f'{outputFolder}/ModelParameters.npz', 
+             HiddenLayersSizes=HiddenLayersSizes, 
+             epochs=epoch, 
+             InputSize=InputSize, 
+             OutputSize=OutputSize, 
+             SetSize=SetSize, 
+             act=act.__name__, 
+             actout=actout.__name__, 
+             accuracy=accuracy,
+             )
 
     layers = ''
     layers += f'{InputSize}-'

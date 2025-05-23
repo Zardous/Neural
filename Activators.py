@@ -6,6 +6,12 @@ def Sigmoid(s):
 def ddsSigmoid(s):
     return np.exp(-s)/((1 + np.exp(-s))**2)
 
+def SiLU(s):
+    return s/(1+np.exp(-s))
+
+def ddsSiLU(s):
+    return (1+np.exp(-s)+s*np.exp(-s))/(1+np.exp(-s))**2
+
 def ReLU(s):
     return np.maximum(0, s)
 
@@ -31,30 +37,41 @@ def Tanh(s):
 def ddsTanh(s):
     return 1 - np.tanh(s)**2
 
+def Asinh(s):
+    return np.arcsinh(s)
+
+def ddsAsinh(s):
+    return 1/(s**2+1)**0.5
+
 def SoftMax(s):
     return np.exp(s) / np.sum(np.exp(s))
 
 def ddsSoftMax(s):
-    print('Work in progress')
-    quit
-    return 
+    return 1
+
+def Gaussian(s):
+    return np.exp(-s**2)
+
+def ddsGaussian(s):
+    return -2*s*np.exp(-s**2)
+
+def Exp(s):
+    return np.exp(s)
+
+def ddsExp(s):
+    return np.exp(s)
 
 actFunctionDerivatives = {
     Sigmoid: ddsSigmoid,
+    SiLU: ddsSiLU,
     ReLU: ddsReLU,
     LeakyReLU: ddsLeakyReLU,
     SoftPlus: ddsSoftPlus,
     Tanh: ddsTanh,
-    SoftMax: ddsSoftMax
-}
-
-actFunctionNames = {
-    'Sigmoid': Sigmoid,
-    'ReLU': ReLU,
-    'LeakyReLU': LeakyReLU,
-    'SoftPlus': SoftPlus,
-    'Tanh': Tanh,
-    'SoftMax': SoftMax
+    Asinh: ddsAsinh,
+    SoftMax: ddsSoftMax,
+    Gaussian: ddsGaussian,
+    Exp: ddsExp,
 }
 
 
