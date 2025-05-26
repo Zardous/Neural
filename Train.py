@@ -5,25 +5,25 @@ import os
 #row of matrix is array of weights on the neuron
 
 #Choose activation functions
-act = Sigmoid
+act = Asinh
 actout = SoftMax
 ddsAct = eval("dds"+act.__name__)
 ddsActout = eval("dds"+actout.__name__)
 
-weightsInitRange =0.003
+weightsInitRange =0.01
 weightsMedian = 0.0
 biasesInitRange = 0.0
 biasesMedian = 0.0
 
-HiddenLayersSizes = (80,) #TODO: Figure out how to choose layers, maybe train an AI
-batchSize = 10
+HiddenLayersSizes = (5,) #TODO: Figure out how to choose layers, maybe train an AI
+batchSize = 20
 
-epochs = 1
+epochs = 4
 
-eta = 0.005 #learning rate
+eta = 0.001 #learning rate
 etaDecay = 0.7 #learning rate decay
 
-targetAccuracy = 0.97 #Targeted accuracy
+targetAccuracy = 0.0 #Targeted accuracy
 
 trainFraction = 0.9 #fraction of the dataset to use for training
 
