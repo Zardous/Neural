@@ -46,6 +46,7 @@ def ddsAsinh(s):
 def SoftMax(s):
     e = np.exp(s - np.max(s))
     return e / np.sum(e)
+    # return s / np.sum(s)
 
 def ddsSoftMax(s):
     return 1

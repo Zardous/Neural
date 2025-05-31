@@ -2,12 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from DataHandler import *
 from Activators import *
-from Train import ForwardPass, trainFraction
+from TrainSigns import ForwardPass, trainFraction
 
 def SampleShow(index):
     inp = Sample(index)[0]
     Label = Sample(index)[2]
-    activations = ForwardPass(inp, weights, biases)[0]
+    activations = ForwardPass()[0]
     PredictIndex = np.argmax(activations[-1])
     PredictChar = chr(data['dataset'][0][0][2][PredictIndex][-1])
     confidence = activations[-1][PredictIndex][0]
@@ -27,7 +27,7 @@ def benchmark():
             count += 1
             inp, _, Label, _ = Sample(index)
 
-            activations, _ = ForwardPass(inp, weights, biases)
+            activations, _ = ForwardPass()
 
             PredictIndex = np.argmax(activations[-1]) #Find the index that has the highest predicted probability
             PredictChar = chr(data['dataset'][0][0][2][PredictIndex][-1]) #Map the index to a character
