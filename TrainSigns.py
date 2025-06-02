@@ -187,7 +187,32 @@ if __name__ == '__main__':
     recentre = 1
 
     #Randomly initialize every layer's weights and biases in a list, taking into account whether or not there are hidden layers
-    randomiseWB(InputSize, OutputSize, HiddenLayersSizes, weightsInitRange, weightsMedian, biasesInitRange, biasesMedian)
+    reset = False
+    if reset:
+        randomiseWB(InputSize, OutputSize, HiddenLayersSizes, weightsInitRange, weightsMedian, biasesInitRange, biasesMedian)
+    else:
+        inputFolder = getInputfolder('Signs(128,64)98.5%')
+        global weights, deltaWeights, biases, deltaBiases
+        weights, biases, HiddenLayersSizes, InputSize, OutputSize, epochs, act, actout, ddsAct, ddsActout = loadModel(inputFolder)
+        deltaWeights = []
+        if len(HiddenLayersSizes) > 0:
+            deltaWeights.append(np.zeros((HiddenLayersSizes[0], InputSize)))
+            for i in range(1, len(HiddenLayersSizes)):
+                deltaWeights.append(np.zeros((HiddenLayersSizes[i], HiddenLayersSizes[i-1])))
+            deltaWeights.append(np.zeros((OutputSize, HiddenLayersSizes[-1])))
+        elif len(HiddenLayersSizes) == 0:
+            deltaWeights.append(np.zeros((OutputSize, InputSize)))
+        else:
+            raise ValueError('Invalid number of hidden layers')
+
+        deltaBiases = []
+        for i in range(0, len(HiddenLayersSizes)):
+            deltaBiases.append(np.zeros((HiddenLayersSizes[i], 1)))
+        deltaBiases.append(np.zeros((OutputSize, 1)))
+        print('Created matrix for delta- weights and biases')
+
+
+
 
     if True: # Internal parameters initialisation
         Tstart = time.time()

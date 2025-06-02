@@ -1,6 +1,7 @@
 import numpy as np
 import pygame as pg
 import os
+from Activators import *
 
 def storeAllSigns(size, root = 'data/Classes'):
     for f in range(len(os.listdir(root))):
@@ -67,3 +68,35 @@ def RestoreRGB(inp,size):
     inp = inp.squeeze()
     reshaped = inp.reshape((size, size, 3))  
     return reshaped  
+
+def getInputfolder(default = 'Output'):
+    inputFolder = input('Enter folder to load model: ')
+    if inputFolder == '':
+        inputFolder = default
+        print(f'Defaulting input folder to: \'{inputFolder}\'')
+    else:
+        print(f'Input folder set to: \'{inputFolder}\'')
+    return inputFolder
+
+def loadModel(inputFolder):
+    print('Loading model parameters')
+    ModelParameters = np.load(f'{inputFolder}/ModelParameters.npz')
+    HiddenLayersSizes = ModelParameters['HiddenLayersSizes']
+    InputSize = ModelParameters['InputSize']
+    OutputSize = ModelParameters['OutputSize']
+    epochs = ModelParameters['epochs']
+    act = eval(str(ModelParameters['act'])) 
+    actout = eval(str(ModelParameters['actout']))
+    ddsAct = eval("dds"+str(ModelParameters['act']))
+    ddsActout = eval("dds"+str(ModelParameters['actout']))
+
+    weights = []
+    biases = []
+
+    print('initialising weights and biases')
+    for i in range(len(HiddenLayersSizes)+1):
+        print(f'Loading weights and biases for layer {i}')
+        weights.append(np.load(f'{inputFolder}/weights[{i}].npz')['weights'])
+        biases.append(np.load(f'{inputFolder}/biases[{i}].npz')['biases'])
+    print('Ready')
+    return weights, biases, HiddenLayersSizes, InputSize, OutputSize, epochs, act, actout, ddsAct, ddsActout
