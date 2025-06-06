@@ -59,7 +59,7 @@ epochs = 100 # This is a minimum used for training
 etaStart = 0.1 #learning rate at start
 etaDecay = 0.0001 #learning rate decay
 
-targetAccuracy = 0.98 #Targeted accuracy
+targetAccuracy = 1 #Targeted accuracy
 
 drawFrequency = 300
 
