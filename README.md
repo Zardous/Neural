@@ -5,4 +5,4 @@ The model can be verified using Run.py, which benchmarks the model on images it 
 
 For verification: My name is Micah Goede, 6022073
 
-Disclaimer: at 00:22 i fixed a type: data->datasets. No content has changed
+Disclaimer: at 00:22 i fixed a typo: data->datasets. No content has changed
