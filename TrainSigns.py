@@ -65,7 +65,7 @@ drawFrequency = 300
 
 # Initialisation for some model parameters
 T0 = time.time()
-root = 'data/Training'
+root = 'datasets/Training'
 InputSize = size**2 *3
 OutputSize = len(os.listdir(f'{root}'))
 

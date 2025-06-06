@@ -4,3 +4,5 @@ For evaluation I suggest to run TrainSigns.py, which by default loads and contin
 The model can be verified using Run.py, which benchmarks the model on images it has never seen before.
 
 For verification: My name is Micah Goede, 6022073
+
+Disclaimer: at 00:22 i fixed a type: data->datasets. No content has changed
