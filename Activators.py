@@ -1,3 +1,7 @@
+'''
+This is a library that defines many common activation functions and their derivatives.
+'''
+
 import numpy as np
 
 def Sigmoid(s):
@@ -26,7 +30,6 @@ def ddsLeakyReLU(s, alpha=0.05):
 
 def SoftPlus(s):
     return np.log1p(np.exp(s))
-# np.log1p is more stable than np.log(1 + np.exp(s))
 
 def ddsSoftPlus(s):
     return np.exp(s)/(1 + np.exp(s))
@@ -46,7 +49,6 @@ def ddsAsinh(s):
 def SoftMax(s):
     e = np.exp(s - np.max(s))
     return e / np.sum(e)
-    # return s / np.sum(s)
 
 def ddsSoftMax(s):
     return 1

@@ -1,45 +1,75 @@
+'''
+This is the main code of my project; it trains an AI to classify images.
+The code has a lot of functionality which I've tried to document as good as I can in the code itself, it is too much for a docstring.
+When running this file, a window will appear. The images are saliency maps that the code optimises gradually: For every type of sign,
+the AI displays what type of image maximally activates the class. Essentially, the AI learns itself what the 164 different signs look
+like and shows the user what is has learned so far. Due to the nature of the activation function used on the maps, the images naturally
+tend to black. This means that unimportant pixels slowly fade to black over time, and only pixels that the AI continues to find important
+retain their colour.
+
+The UI also features buttons to reset the model or to save it to the disk in the specified folder. It allows the user to change the
+display logic: by default, every saliency map (referred to internally as v) is normalised. Another option is to type 
+v = v/np.max(saliency), to normalise the images w.r.t. their global maximum. This can be interesting to show which images are brighter than
+others, indicating that the model has a higher confidence in what this type of sign looks like.
+
+There is also a terminal in the top right which is executed with every update of the screen. This can be used to change many of the
+models parameters at runtime (for instance, learning rate can be lowered by running etaStart = 0.01)
+
+With the default parameters as specified below, the UI will feel very sluggish. This was done intentionally to balance performance:
+not a lot of time is spent updating the screen or training the saliency maps, so that more time is spent tuning the model. If needed,
+the drawFrequency can be lowered to update the screen more often.
+'''
+
 from DataHandler import *
 from Activators import *
+from Range import *
+from UI import *
 import time
 import os
-from UI import *
 
-#row of matrix is array of weights on the neuron
-
+# Specify the dimensions of the images in the dataset
 size = 40
 
+# Name of the set the model trains on, for clarity only
 SetName = 'Signs'
+
+# Load existing model or create new
+LoadExisting = True
+
+# Choose activation functions
+act = SiLU # For all layers but the last
+actout = SoftMax # For the last (output) layer
+
+# Automatically load the derivatives of the above activation functions
+ddsAct = eval("dds"+act.__name__)
+ddsActout = eval("dds"+actout.__name__)
+
+# Function to use for the range of initial values of the weights
+Init = KaimingN
+
+biasesInitRange = 0.0
+biasesMedian = 0.0
+
+HiddenLayersSizes = (256,128) 
+
+batchSize = 164//2
+
+epochs = 100 # This is a minimum used for training
+
+etaStart = 0.1 #learning rate at start
+etaDecay = 0.0001 #learning rate decay
+
+targetAccuracy = 0.98 #Targeted accuracy
+
+drawFrequency = 300
+
+# Initialisation for some model parameters
 T0 = time.time()
 root = 'data/Training'
 InputSize = size**2 *3
 OutputSize = len(os.listdir(f'{root}'))
 
-#Choose activation functions
-act = SiLU
-actout = SoftMax
-ddsAct = eval("dds"+act.__name__)
-ddsActout = eval("dds"+actout.__name__)
-
-weightsInitRange = 0.1
-weightsMedian = 0.0
-biasesInitRange = 0.0
-biasesMedian = 0.0
-
-HiddenLayersSizes = (128,64) 
-batchSize = 48
-
-epochs = 4
-
-etaStart = 0.2 #learning rate at start
-etaDecay = 0.09 #learning rate decay
-
-targetAccuracy = 0.95 #Targeted accuracy
-
-trainFraction = 0.9 #fraction of the dataset to use for training
-
-drawFrequency = 500
-
-def ForwardPass():
+def ForwardPass(inp, weights, biases):
     activations = []
     stimuli = []
     for i in range(len(biases)):
@@ -57,20 +87,21 @@ def ForwardPass():
             activations.append(actout(z))
     return activations, stimuli
 
-def randomiseWB(InputSize, OutputSize, HiddenLayersSizes, weightsInitRange, weightsMedian, biasesInitRange, biasesMedian):
+def randomiseWB(InputSize, OutputSize, HiddenLayersSizes, biasesInitRange, biasesMedian):
+    recentre = 1
     global weights, deltaWeights, biases, deltaBiases
     weights = []
     deltaWeights = []
     if len(HiddenLayersSizes) > 0:
-        weights.append((np.random.rand(HiddenLayersSizes[0], InputSize)-1/2*recentre) * weightsInitRange + weightsMedian)
+        weights.append(Init(InputSize, HiddenLayersSizes[0], HiddenLayersSizes[1]))
         deltaWeights.append(np.zeros((HiddenLayersSizes[0], InputSize)))
         for i in range(1, len(HiddenLayersSizes)):
-            weights.append((np.random.rand(HiddenLayersSizes[i], HiddenLayersSizes[i-1])-1/2*recentre) * weightsInitRange + weightsMedian)
+            weights.append(Init(HiddenLayersSizes[i-1], HiddenLayersSizes[i], HiddenLayersSizes[i+1] if i+1<len(HiddenLayersSizes) else OutputSize))
             deltaWeights.append(np.zeros((HiddenLayersSizes[i], HiddenLayersSizes[i-1])))
-        weights.append((np.random.rand(OutputSize, HiddenLayersSizes[-1])-1/2*recentre) * weightsInitRange + weightsMedian)
+        weights.append(Init(HiddenLayersSizes[-1], OutputSize, 0))
         deltaWeights.append(np.zeros((OutputSize, HiddenLayersSizes[-1])))
     elif len(HiddenLayersSizes) == 0:
-        weights.append((np.random.rand(OutputSize, InputSize)-1/2*recentre) * weightsInitRange + weightsMedian)
+        weights.append(Init(InputSize, OutputSize, 0))
         deltaWeights.append(np.zeros((OutputSize, InputSize)))
     else:
         raise ValueError('Invalid number of hidden layers')
@@ -110,6 +141,7 @@ def saveModel(outputFolder, weights, biases, HiddenLayersSizes, epoch, InputSize
              act=act.__name__, 
              actout=actout.__name__, 
              accuracy=accuracy,
+             eta=eta
              )
 
     layers = ''
@@ -152,48 +184,7 @@ def backpropagation(gradC, write=True):
     deltaSaliency = weights[0].T @ delta
     return deltaWeights, deltaBiases, deltaSaliency
     
-if __name__ == '__main__':
-    if True: # UI initialisation
-        pg.init()
-        pg.key.set_repeat(500,50)
-
-        # Screen
-        windowSizePercentage = 0.75
-        displayInfo = pg.display.Info()
-        windowWidth = int(displayInfo.current_w * windowSizePercentage)
-        windowHeight = int(displayInfo.current_h * windowSizePercentage)
-        pg.display.set_caption('Perceptron')
-        window = pg.display.set_mode((windowWidth, windowHeight), pg.RESIZABLE)
-
-        resetButton = Button(window, (10,10), 'Reset', 50)
-        saveButton = Button(window, (10, 60), 'Save', 1)
-        vDef = txtInput(window,(resetButton.Dimensions[0]+20, 10), 'Display command')
-        vDef.text = 'v = v'
-        vDef.output = vDef.text
-        outputFolderBox = txtInput(window, (vDef.pixelCoords[0], vDef.pixelCoords[1]+50), 'Output folder')
-        outputFolderBox.text = 'Output'
-        outputFolderBox.output = outputFolderBox.text
-        terminal = txtInput(window, (0,0), 'Terminal')
-        accuracyBar = Header(window, (window.get_width()/2,10), 'Loading')
-
-        pix = 1.5
-        windowColour = 20
-
-    print('Loading all training signs')
-    dataset = loadAllSigns('data/NPZs40px')
-    SetSize = len(dataset)
-
-    print('Training model')
-    recentre = 1
-
-    #Randomly initialize every layer's weights and biases in a list, taking into account whether or not there are hidden layers
-    reset = False
-    if reset:
-        randomiseWB(InputSize, OutputSize, HiddenLayersSizes, weightsInitRange, weightsMedian, biasesInitRange, biasesMedian)
-    else:
-        inputFolder = getInputfolder('Signs(128,64)98.5%')
-        global weights, deltaWeights, biases, deltaBiases
-        weights, biases, HiddenLayersSizes, InputSize, OutputSize, epochs, act, actout, ddsAct, ddsActout = loadModel(inputFolder)
+def createDeltaWB(InputSize, HiddenLayersSizes, OutputSize):
         deltaWeights = []
         if len(HiddenLayersSizes) > 0:
             deltaWeights.append(np.zeros((HiddenLayersSizes[0], InputSize)))
@@ -204,25 +195,66 @@ if __name__ == '__main__':
             deltaWeights.append(np.zeros((OutputSize, InputSize)))
         else:
             raise ValueError('Invalid number of hidden layers')
-
         deltaBiases = []
         for i in range(0, len(HiddenLayersSizes)):
             deltaBiases.append(np.zeros((HiddenLayersSizes[i], 1)))
         deltaBiases.append(np.zeros((OutputSize, 1)))
         print('Created matrix for delta- weights and biases')
+        return deltaWeights, deltaBiases
+    
+if __name__ == '__main__':
+    # UI initialisation (I use 'if True:' to collapse this code in the editor; it is never False)
+    if True: 
+        pg.init()
+        pg.key.set_repeat(500,33)
 
+        # Screen
+        windowSizePercentage = 0.75
+        displayInfo = pg.display.Info()
+        windowWidth = int(displayInfo.current_w * windowSizePercentage)
+        windowHeight = int(displayInfo.current_h * windowSizePercentage)
+        pg.display.set_caption('Perceptron')
+        window = pg.display.set_mode((windowWidth, windowHeight), pg.RESIZABLE)
 
+        # UI
+        resetButton = Button(window, (10,10), 'Reset', 50)
+        saveButton = Button(window, (10, 60), 'Save', 1)
+        vDef = txtInput(window,(resetButton.Dimensions[0]+20, 10), 'Display command')
+        vDef.text = 'v = v/np.max(v)'
+        vDef.output = vDef.text
+        outputFolderBox = txtInput(window, (vDef.pixelCoords[0], vDef.pixelCoords[1]+50), 'Output folder')
+        outputFolderBox.text = 'Output'
+        outputFolderBox.output = outputFolderBox.text
+        terminal = txtInput(window, (0,0), 'Terminal')
+        accuracyBar = Header(window, (window.get_width()/2,10), 'Loading')
 
+        pix = 1.5 # Scale of the matrices
+        windowColour = 20 # Background colour
 
-    if True: # Internal parameters initialisation
+    print('Loading all training signs')
+    dataset, SetSize = loadAllSigns('datasets/Training')
+    print(f'Loaded {SetSize} signs')
+
+    # Internal parameters initialisation 
+    if True: 
         Tstart = time.time()
         epoch = 1
         eta = etaStart
         accuracy = 0
-        SaliencyDepth = len(weights)
         results = np.zeros((5000,1))
         confidenceList = np.zeros((5000,1))
         saliency = np.zeros((OutputSize,InputSize))
+
+    # Initialisation of weights and biases
+    if LoadExisting:
+        inputFolder = getInputfolder('Trained model')
+        weights, biases, HiddenLayersSizes, InputSize, OutputSize, epochsDone, act, actout, ddsAct, ddsActout = loadModel(inputFolder)
+        deltaWeights, deltaBiases = createDeltaWB(InputSize, HiddenLayersSizes, OutputSize)
+        epoch = epochsDone + 1
+    else:
+        randomiseWB(InputSize, OutputSize, HiddenLayersSizes, biasesInitRange, biasesMedian)
+    print('Initialised weights and biases')
+
 
     # outputFolder = input('Enter folder to store output: ')
     outputFolder = outputFolderBox.output
@@ -231,31 +263,29 @@ if __name__ == '__main__':
         print(f'Defaulting output folder to: \'{outputFolder}\'')
     else:
         print(f'Output folder set to: \'{outputFolder}\'')
-
+    
+    print(f'Learning rate after training on {SetSize} images (full dataset): {np.exp(-etaDecay*SetSize/len(dataset)) *100:.2f}% of start rate')
+    print('Training model')
+    index =0
     while epoch <= epochs or accuracy < targetAccuracy:
-        index = 0
-        correct = 0
-        incorrect = []
         epochStart = time.time() # Store starting time of epoch for iteration time calculation
-        popset = createPopset(dataset)
+        popset = createPopset(dataset) # create a set that the model uses to pick a random image and not pick it again until the next epoch
         while len(popset) > 0:
-            eta = etaStart * np.exp(-etaDecay * epoch)
+            eta = etaStart * np.exp(-etaDecay * epoch) # Update learning rate
 
-            image, Target, Label, MapIndex = SampleSign(dataset, popset, OutputSize)
-            inp = image.flatten()
+            image, Target, Label, MapIndex = SampleSign(dataset, popset, OutputSize) # Retrieve image with its data
+            inp = image.flatten() / 255
             inp.shape += (1,)
 
-            activations, stimuli = ForwardPass()
+            activations, stimuli = ForwardPass(inp, weights, biases) # Process the image
 
-            PredictIndex = np.argmax(activations[-1]) #Find the index that has the highest predicted probability
-            if PredictIndex != MapIndex:
-                incorrect += [Label] #Store indeces that were predicted incorrectly
+            PredictIndex = np.argmax(activations[-1]) #Find the output index that has the highest predicted probability
             results[index % (results.shape[0])] = 1 if PredictIndex == MapIndex else 0 #If predicted correctly, set an entry to 1, else 0
-            accuracy = np.sum(results) / min(results.shape[0] , index + 1 + (epoch-1) * SetSize)
+            accuracy = np.sum(results) / min(results.shape[0] , index + 1 + (epoch-1) * len(dataset))
             confidenceList[index % (results.shape[0])] = np.max(activations[-1])
-            confidence = np.sum(confidenceList) / min(confidenceList.shape[0] , index + 1 + (epoch-1) * SetSize)
+            confidence = np.sum(confidenceList) / min(confidenceList.shape[0] , index + 1 + (epoch-1) * len(dataset))
 
-            deltaWeights, deltaBiases, _ = backpropagation(activations[-1] - Target)
+            deltaWeights, deltaBiases, _ = backpropagation(activations[-1] - Target) # Update the model
 
             # ==== Draw frame ====#
             if index%drawFrequency==0:
@@ -263,28 +293,20 @@ if __name__ == '__main__':
 
                 # Maps
                 x=0
-                y=125
+                y=100
                 dx = 30
                 dy=0
-                if False:
-                    actf = act if 0 < len(HiddenLayersSizes) else actout
-                    saliency = actf(weights[0] + biases[0])
-                    for i in range(1, SaliencyDepth):
-                        actf = act if i < len(HiddenLayersSizes) else actout
-                        saliency = actf(weights[i] @ saliency + biases[i])
-                
-                if True: # Draw Saliency maps
+                if True: # Train and draw saliency maps, can be disabled for performance
                     x += dx
                     y += (dy+dx)
-                    i=0
-                    for row in saliency:
+                    for i, row in enumerate(saliency):
                         oneHot = np.zeros((OutputSize,1))
                         oneHot[i]=1
                         inp = row
                         inp.shape += (1,)
-                        activations, stimuli = ForwardPass()
+                        activations, stimuli = ForwardPass(inp, weights, biases)
                         v = inp + eta * backpropagation(oneHot, False)[2]
-                        # v = Sigmoid(4*v-2)
+                        # v = Sigmoid(4*v-2) # Alternative for screenAct, this will tend the image to gray instead of black
                         v = screenAct(v)
                         v = v.squeeze()
                         saliency[i]=v
@@ -300,10 +322,11 @@ if __name__ == '__main__':
                         if x+(v.shape[0] * pix) > window.get_width() - dx:
                             x=dx
                             y += (dy+dx)
-                        i+=1
 
                 active = True
                 while active: # Handle and possibly show UI
+
+                    # Get updates
                     for event in pg.event.get():
                         if event.type == pg.QUIT:
                             quit()
@@ -312,9 +335,10 @@ if __name__ == '__main__':
                         vDef.handleEvent(event)
                         terminal.handleEvent(event)
                         outputFolderBox.handleEvent(event)
+
                     # UI
                     accuracyBar.pixelCoords = window.get_width()/2-accuracyBar.Dimensions[0]/2, accuracyBar.pixelCoords[1]
-                    accuracyBar.header = f'Accuracy: {accuracy*100:.1f}%, Confidence: {confidence*100:.1f}%'
+                    accuracyBar.header = f'Accuracy: {accuracy*100:.2f}%, Confidence: {confidence*100:.2f}%'
                     accuracyBar.draw()
                     terminal.pixelCoords = window.get_width()-10-terminal.Dimensions[0], 10
                     try:
@@ -327,7 +351,7 @@ if __name__ == '__main__':
                     resetButton.draw()
                     if resetButton.state == True:
                         eta = etaStart
-                        randomiseWB(InputSize, OutputSize, HiddenLayersSizes, weightsInitRange, weightsMedian, biasesInitRange, biasesMedian)
+                        randomiseWB(InputSize, OutputSize, HiddenLayersSizes, biasesInitRange, biasesMedian)
                         resetButton.state = False
                     saveButton.draw()
                     if saveButton.state == True:
@@ -344,12 +368,12 @@ if __name__ == '__main__':
                     if active:
                         pg.display.flip()
 
-                # rest = RestoreRGB(inp,size)*255
-                # plotArray(window, (50,500), rest).draw(5)
+                # plotArray(window, (50,500), image).draw(5) # Uncomment to draw the last image that was trained on
                 pg.display.flip()
-                print(f'Index: {index}/{round(SetSize*trainFraction)}, epoch: {epoch}/{epochs}, Accuracy: {round(100*accuracy,1)}%, Iteration time: {round(1000*(time.time()-epochStart)/(index+1),2)}ms Compute time: {int(np.floor((time.time()-Tstart)/60))}m{round((time.time()-Tstart)%60)}s        ', end='\r')
+                print(f'Index: {index}/{round(SetSize)}, epoch: {epoch}/{epochs}, Accuracy: {round(100*accuracy,2)}%, Learning rate: {eta}, Iteration time: {round(1000*(time.time()-epochStart)/(index+1),2)}ms Compute time: {int(np.floor((time.time()-Tstart)/60))}m{round((time.time()-Tstart)%60)}s        ', end='\r')
 
-            if index%batchSize == 0 or len(popset)==0:
+            # Update the weights and biases after training a batch or when the epoch is over
+            if (index%batchSize == 0 and index!=0) or len(popset)==0:
                 for i in range(len(weights)):
                     weights[i] += deltaWeights[i]/batchSize
                     biases[i] += deltaBiases[i]/batchSize
@@ -364,6 +388,7 @@ if __name__ == '__main__':
     saveModel(outputFolder, weights, biases, HiddenLayersSizes, epoch, InputSize, OutputSize, SetSize, act, actout, accuracy, SetName)
 
 
+# This code can be swapped in to visualise layer weights instead of saliency maps
                 # for layer in range(len(biases)):
                 #     x = dx
                 #     y += (dy+dx)

@@ -1,17 +1,23 @@
+'''
+This is a library I made to simplify UX in other parts of this project. 
+
+If run directly, it can be used to display the weights of inputs of any neuron in any layer of the trained model. 
+Often, interesting patterns are revealed. The PyGame application this runs is not meant to be a stand alone product, it is just an extra.
+'''
+
 import pygame as pg
 import numpy as np
+from Activators import *
 
-if __name__=='__main__':
+if __name__=='__main__': # Initialise the application
     pg.init()
     # Screen dimensions
-    windowSizePercentage = 0.6
+    windowSizePercentage = 0.8
     displayInfo = pg.display.Info()
     windowWidth = int(displayInfo.current_w * windowSizePercentage)
     windowHeight = int(displayInfo.current_h * windowSizePercentage)
     pg.display.set_caption('GUI module')
     window = pg.display.set_mode((windowWidth, windowHeight), pg.RESIZABLE)
-
-import pygame as pg
 
 class txtInput:
     def __init__(self, window, pixelCoords: tuple, title='', numericalOnly = False):
@@ -531,26 +537,33 @@ highlightThickness = 0
 borderRadius = 8
 padding = max(borderRadius,6)
 
-if __name__=='__main__':
+if __name__=='__main__': # Do not run when importing:
+    # Define elements on the screen
     box = txtInput(window, (50, 50))
+    box.text = 'Trained model'
+    box.output = box.text
     box.title =  'Text input box'
     terminal = txtInput(window, (50, 125))
+    terminal.text = 'matrix = ReLU(matrix)'
+    terminal.output = terminal.text
     terminal.title = 'Terminal'
     check = Checkbox(window, (50,200))
-    check.state = False
+    check.state = True
     slider = Slider(window, (50, 275), 150, 1, 20, 20)
     dropdown = Dropdown(window, (50, 350), 'Choose layer', [0,1], 'Choose layer')
     button = Button(window, (50,425), 'Press', 50)
+    neuronSlider = Slider(window, (50, 500), 150, 1, 127, 0)
 
-    # Cursor
+    # Text cursor
     pg.key.set_repeat(500,33)
 
 
     clock = pg.time.Clock()
     running = True
-    while running:
+    while running: # Main loop
         window.fill(bgColour)
-
+        
+        # Check for updates for UI
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 running = False
@@ -560,34 +573,44 @@ if __name__=='__main__':
             slider.handleEvent(event)
             dropdown.handleEvent(event)
             button.handleEvent(event)
+            neuronSlider.handleEvent(event)
 
-        if not box.output:
+
+        if not box.output: # Set the default output of the box element to 0 to load neuron 0
             box.output= 0
         if dropdown.selected == dropdown.default:
-            dropdown.selected='0'
-        matrix = np.load(rf"MNIST95%\weights[{str(dropdown.selected)}].npz")['weights'][int(box.output)] * 255
+            dropdown.selected='0' # Set the default output of the dropdown element to 0 to load layer 0
         try:
-            matrix = matrix.reshape(28,28)
+            matrix = np.load(rf"{box.output}\weights[{str(dropdown.selected)}].npz")['weights'][int(neuronSlider.value)]
+        except Exception as e:
+            print(e)
+        try:
+            matrix = matrix.reshape(40,40,3) # Reshape the 2D matrix to RGB
         except:
-            pass
-        # matrix = np.load(r"C:\Users\m_goe\Documents\AE\Python\NN\Neural\MNIST95%\biases[0].npz")['biases']
-        array = plotArray(window, (400, 50), matrix)
-
+            pass        
+        
+        # Draw UI elements to the screen (except for the array, that needs some extra calculation)
         box.draw()
         check.draw()
         terminal.draw()
         slider.draw()
         dropdown.draw()
         button.draw()
-        try:
+        neuronSlider.draw()
+
+        # Try to execute the code thats in the terminal element
+        try: 
             if terminal.output:
                 exec(terminal.output)
-                terminal.output = ''
-        except Exception as e:
+        # If that didnt work, print the error and let the user type again
+        except Exception as e: 
             print(f"Error: {e}")
-            terminal.output = ''
+            terminal.output = '' # Make sure the terminal wont run the faulty command again until the user presses enter or clicks away
+            terminal.active = True
 
+        # Update the RGB matrix with the scale defined by the slider, then draw it
         scale = slider.value
+        array = plotArray(window, (400, 50), matrix*255)
         if check.state:
             array.draw(scale)
 
